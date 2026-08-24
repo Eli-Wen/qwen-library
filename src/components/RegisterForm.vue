@@ -3,7 +3,7 @@ import { ref } from 'vue'
 
 const fullName = ref('')
 const email = ref('')
-const errors =ref([])
+const errors = ref([])
 const successMessage = ref('')
 
 function registerUser(){

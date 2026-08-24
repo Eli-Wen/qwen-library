@@ -2,7 +2,7 @@
 const guides = [
     {
         id: 1,
-        item: 'Carboard box',
+        item: 'Cardboard box',
         category: 'Sample household item',
         instruction: 'Sample instruction for checking the correct recycling option.'
     },
