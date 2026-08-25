@@ -23,16 +23,59 @@ const guides = [
 </script>
 
 <template>
-  <section>
+  <section class="guide-section">
     <h2>
         Recycling Guide
     </h2>
-    <ul>
-        <li v-for="guide in guides" :key="guide.id">
+    <ul class="guide-list">
+        <li v-for="guide in guides" :key="guide.id" class="guide-item">
             <h3>{{ guide.item }}</h3>
-            <p>{{ guide.category }}</p>
+            <p class="guide-category">{{ guide.category }}</p>
             <p>{{ guide.instruction }}</p>
         </li>
     </ul>
   </section>
 </template>
+
+<style scoped>
+.guide-section {
+    width: 100%;
+
+}
+
+.guide-list {
+    display: grid;
+    gap: 1rem;
+    padding: 0;
+    margin: 1rem 0 0;
+    list-style: none;
+
+}
+
+.guide-item {
+    padding: 1rem;
+    border: 1px solid #d5d5d5;
+    border-radius: 0.6rem;
+    background-color: #f8fbfa;
+
+}
+
+.guide-item h3 {
+    margin: 0 0 0.5rem;
+}
+
+.guide-item p {
+    margin: 0.4rem 0;
+}
+
+.guide-category {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+@media (min-width: 768px) {
+    .guide-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+</style>

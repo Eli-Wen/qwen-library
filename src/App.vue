@@ -1,18 +1,16 @@
 <script setup>
-import { ref } from 'vue'
+import { ref } from "vue";
 
-import RecyclingGuide from './components/RecyclingGuide.vue'
-import RecyclingLocations from './components/RecyclingLocations.vue'
-import RegisterForm from './components/RegisterForm.vue'
+import RecyclingGuide from "./components/RecyclingGuide.vue";
+import RecyclingLocations from "./components/RecyclingLocations.vue";
+import RegisterForm from "./components/RegisterForm.vue";
 
-const activePage = ref('guide')
+const activePage = ref("guide");
 </script>
 
 <template>
   <header class="site-header">
-    <h1 class="site-title">
-      CircularLoop Melbourne
-    </h1>
+    <h1 class="site-title">CircularLoop Melbourne</h1>
 
     <nav class="site-nav" aria-label="Main navigation">
       <button @click="activePage = 'guide'">Guide</button>
@@ -22,21 +20,19 @@ const activePage = ref('guide')
   </header>
 
   <main class="page-content">
-      <RecyclingGuide v-if="activePage === 'guide'" />
-      <RecyclingLocations v-if="activePage === 'locations'"/>
-      <RegisterForm v-if="activePage === 'register'"/>
+    <RecyclingGuide v-if="activePage === 'guide'" />
+    <RecyclingLocations v-if="activePage === 'locations'" />
+    <RegisterForm v-if="activePage === 'register'" />
   </main>
 </template>
 
 <style scoped>
-
 .site-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   padding: 1rem 0;
-
 }
 
 .site-title {
@@ -48,7 +44,6 @@ const activePage = ref('guide')
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-
 }
 
 .site-nav button {
@@ -65,7 +60,6 @@ const activePage = ref('guide')
 
 .page-content {
   padding: 1.5rem 0;
-
 }
 
 @media (max-width: 767px) {
@@ -107,7 +101,7 @@ const activePage = ref('guide')
   .site-nav {
     flex-wrap: nowrap;
   }
-  
+
   .page-content {
     width: 100%;
     max-width: 900px;
