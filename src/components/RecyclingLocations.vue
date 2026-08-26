@@ -1,4 +1,6 @@
 <script setup>
+
+import { computed, ref } from 'vue'
 const locations = [
     {
         id: 1,
@@ -13,6 +15,24 @@ const locations = [
         acceptedItems: 'Used household batteries'
     }
 ]
+
+const searchTerm = ref('')
+
+const filteredLocations = computed(() => {
+  const keyword = searchTerm.value.trim().toLowerCase()
+
+  if (keyword === '') {
+    return locations
+  }
+
+  return locations.filter((location) => {
+    return [
+      location.name,
+      location.suburb,
+      location.acceptedItems
+    ].some((value) => value.toLowerCase().includes(keyword))
+  })
+})
 </script>
 
 <template>
@@ -20,14 +40,29 @@ const locations = [
         <h2>
             Recycling Locations
         </h2>
+        <div class="location-search">
+          <label for="locationSearch">
+            Search by name, suburb or accepted item
+          </label>
+
+          <input
+            id="locationSearch"
+            v-model="searchTerm"
+            type="search"
+            placeholder="e.g. battery"
+          >
+        </div>
         <ul class="location-list">
-            <li v-for="location in locations" :key="location.id" class="location-item">
+            <li v-for="location in filteredLocations" :key="location.id" class="location-item">
                 <h3>{{ location.name }}</h3>
                 <p>{{ location.suburb }}</p>
                 <p>{{ location.acceptedItems }}</p>
 
             </li>
         </ul>
+        <p v-if="filteredLocations.length === 0" class="no-results">
+          No matching recycling locations found.
+        </p>
     </section>
 </template>
 
@@ -63,5 +98,22 @@ const locations = [
   .location-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
+
+.location-search {
+  display: grid;
+  gap: 0.35rem;
+  margin: 1rem 0;
+}
+
+.location-search input {
+  width: 100%;
+  max-width: 32rem;
+  padding: 0.65rem;
+  font-size: 1rem;
+}
+
+.no-results {
+  color: #a12626;
 }
 </style>
