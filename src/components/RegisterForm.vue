@@ -1,12 +1,15 @@
 <script setup>
 import { ref } from 'vue'
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
+import { auth } from '../firebase'
 
 const fullName = ref('')
 const email = ref('')
+const password = ref('')
 const errors = ref([])
 const successMessage = ref('')
 
-function registerUser(){
+async function registerUser(){
     errors.value = []
     successMessage.value = ''
 
@@ -22,9 +25,37 @@ function registerUser(){
         errors.value.push('Please enter a valid email address.')
     }
 
-    if(errors.value.length === 0){
-        successMessage.value = 'Registration completed successfully.'
+    if (password.value.length < 6) {
+        errors.value.push('Password must contain at least 6 characters.')
     }
+
+    if (errors.value.length > 0) {
+        return
+    }
+
+    try {
+        const userCredential = await createUserWithEmailAndPassword(
+            auth,
+            email.value.trim(),
+            password.value
+        )
+
+        await updateProfile(userCredential.user, {
+            displayName: fullName.value.trim()
+        })
+
+        successMessage.value = 'Registration completed successfully.'
+        fullName.value = ''
+        email.value = ''
+        password.value = ''
+    } catch (error) {
+        if (error.code === 'auth/email-already-in-use') {
+            errors.value.push('This email address is already registered.')
+        } else {
+            errors.value.push('Registration failed. Please try again.')
+        }
+    }
+
 }
 
 </script>
@@ -48,6 +79,17 @@ function registerUser(){
                 <label for="email">Email address</label>
                 <input id="email" v-model="email" type="email">
             </div>
+
+            <div class="form-field">
+                <label for="password">Password</label>
+                <input
+                    id="password"
+                    v-model="password"
+                    type="password"
+                    autocomplete="new-password"
+                >
+            </div>
+
 
             <button type="submit">Submit</button>
 
