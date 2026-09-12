@@ -1,11 +1,31 @@
 <script setup>
 import { ref } from "vue";
+import { onAuthStateChanged, signOut } from "firebase/auth";
+import { auth } from "./firebase";
 
 import RecyclingGuide from "./components/RecyclingGuide.vue";
 import RecyclingLocations from "./components/RecyclingLocations.vue";
 import RegisterForm from "./components/RegisterForm.vue";
+import LoginForm from "./components/LoginForm.vue";
 
 const activePage = ref("guide");
+const currentUser = ref(null);
+
+onAuthStateChanged(auth, (user) => {
+  currentUser.value = user;
+
+  if (
+    user &&
+    (activePage.value === "register" || activePage.value === "login")
+  ) {
+    activePage.value = "guide";
+  }
+});
+
+async function logoutUser() {
+  await signOut(auth);
+  activePage.value = "guide";
+}
 </script>
 
 <template>
@@ -15,7 +35,17 @@ const activePage = ref("guide");
     <nav class="site-nav" aria-label="Main navigation">
       <button @click="activePage = 'guide'">Guide</button>
       <button @click="activePage = 'locations'">Locations</button>
-      <button @click="activePage = 'register'">Register</button>
+      <template v-if="currentUser">
+        <span class="user-status">
+          Signed in as {{ currentUser.displayName || currentUser.email }}
+        </span>
+        <button @click="logoutUser">Logout</button>
+      </template>
+
+      <template v-else>
+        <button @click="activePage = 'register'">Register</button>
+        <button @click="activePage = 'login'">Login</button>
+      </template>
     </nav>
   </header>
 
@@ -23,6 +53,7 @@ const activePage = ref("guide");
     <RecyclingGuide v-if="activePage === 'guide'" />
     <RecyclingLocations v-if="activePage === 'locations'" />
     <RegisterForm v-if="activePage === 'register'" />
+    <LoginForm v-if="activePage === 'login'" />
   </main>
 </template>
 
@@ -80,6 +111,11 @@ const activePage = ref("guide");
   .site-nav button {
     width: 100%;
   }
+
+  .user-status {
+    grid-column: 1 / -1;
+    text-align: center;
+  }
 }
 
 @media (max-width: 575px) {
@@ -99,7 +135,8 @@ const activePage = ref("guide");
   }
 
   .site-nav {
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
+    justify-content: flex-end;
   }
 
   .page-content {
@@ -107,5 +144,12 @@ const activePage = ref("guide");
     max-width: 900px;
     margin: 0 auto;
   }
+}
+
+.user-status {
+  flex-basis: 100%;
+  order: 1;
+  text-align: right;
+  font-weight: 600;
 }
 </style>
