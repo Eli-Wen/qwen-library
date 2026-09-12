@@ -76,7 +76,10 @@ async function logoutUser() {
 
   <main class="page-content">
     <RecyclingGuide v-if="activePage === 'guide'" />
-    <RecyclingLocations v-if="activePage === 'locations'" />
+    <RecyclingLocations
+      v-if="activePage === 'locations'"
+      :current-user="currentUser"
+    />
     <RegisterForm v-if="activePage === 'register'" />
     <LoginForm v-if="activePage === 'login'" />
     <section
