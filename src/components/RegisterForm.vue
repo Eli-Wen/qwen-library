@@ -1,7 +1,8 @@
 <script setup>
 import { ref } from 'vue'
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
-import { auth } from '../firebase'
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore'
+import { auth, db } from '../firebase'
 
 const fullName = ref('')
 const email = ref('')
@@ -42,6 +43,13 @@ async function registerUser(){
 
         await updateProfile(userCredential.user, {
             displayName: fullName.value.trim()
+        })
+
+        await setDoc(doc(db, 'users', userCredential.user.uid), {
+            displayName: fullName.value.trim(),
+            email: userCredential.user.email,
+            role: 'user',
+            createdAt: serverTimestamp()
         })
 
         successMessage.value = 'Registration completed successfully.'

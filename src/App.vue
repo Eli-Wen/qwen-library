@@ -1,7 +1,9 @@
 <script setup>
 import { ref } from "vue";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { auth } from "./firebase";
+
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "./firebase";
 
 import RecyclingGuide from "./components/RecyclingGuide.vue";
 import RecyclingLocations from "./components/RecyclingLocations.vue";
@@ -11,8 +13,25 @@ import LoginForm from "./components/LoginForm.vue";
 const activePage = ref("guide");
 const currentUser = ref(null);
 
-onAuthStateChanged(auth, (user) => {
+const currentRole = ref(null);
+
+async function loadUserRole(user) {
+  currentRole.value = null;
+
+  if (!user) {
+    return;
+  }
+
+  const userProfile = await getDoc(doc(db, "users", user.uid));
+
+  if (userProfile.exists()) {
+    currentRole.value = userProfile.data().role;
+  }
+}
+
+onAuthStateChanged(auth, async (user) => {
   currentUser.value = user;
+  await loadUserRole(user);
 
   if (
     user &&
@@ -39,6 +58,12 @@ async function logoutUser() {
         <span class="user-status">
           Signed in as {{ currentUser.displayName || currentUser.email }}
         </span>
+        <button
+          v-if="currentRole === 'admin'"
+          @click="activePage = 'admin'"
+        >
+          Admin Dashboard
+        </button>
         <button @click="logoutUser">Logout</button>
       </template>
 
@@ -54,6 +79,13 @@ async function logoutUser() {
     <RecyclingLocations v-if="activePage === 'locations'" />
     <RegisterForm v-if="activePage === 'register'" />
     <LoginForm v-if="activePage === 'login'" />
+    <section
+      v-if="activePage === 'admin' && currentRole === 'admin'"
+      class="admin-dashboard"
+    >
+      <h2>Admin Dashboard</h2>
+      <p>Administrator access has been granted.</p>
+    </section>
   </main>
 </template>
 
@@ -151,5 +183,13 @@ async function logoutUser() {
   order: 1;
   text-align: right;
   font-weight: 600;
+}
+
+.admin-dashboard {
+  width: 100%;
+  max-width: 900px;
+  padding: 1.5rem;
+  border: 1px solid #999;
+  border-radius: 0.4rem;
 }
 </style>
