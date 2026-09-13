@@ -10,11 +10,35 @@ import RecyclingLocations from "./components/RecyclingLocations.vue";
 import RegisterForm from "./components/RegisterForm.vue";
 import LoginForm from "./components/LoginForm.vue";
 import AdminDashboard from "./components/AdminDashboard.vue";
+import PageIntro from "./components/PageIntro.vue";
+import SiteFooter from "./components/SiteFooter.vue";
 
 const activePage = ref("guide");
 const currentUser = ref(null);
 
 const currentRole = ref(null);
+const pageIntro = {
+  guide: {
+    label: "Explore",
+    description: "Browse practical recycling guidance for common household items."
+  },
+  locations: {
+    label: "Find and rate",
+    description: "Search listed locations and, once signed in, share a rating."
+  },
+  register: {
+    label: "Create an account",
+    description: "Register to access protected account and rating features."
+  },
+  login: {
+    label: "Account access",
+    description: "Sign in to submit ratings and access your account."
+  },
+  admin: {
+    label: "Protected area",
+    description: "Review registered accounts and their assigned roles."
+  }
+};
 
 async function loadUserRole(user) {
   currentRole.value = null;
@@ -50,32 +74,66 @@ async function logoutUser() {
 
 <template>
   <header class="site-header">
-    <h1 class="site-title">CircularLoop Melbourne</h1>
+    <div class="topbar-content">
+      <h1 class="site-title">CircularLoop Melbourne</h1>
 
-    <nav class="site-nav" aria-label="Main navigation">
-      <button @click="activePage = 'guide'">Guide</button>
-      <button @click="activePage = 'locations'">Locations</button>
-      <template v-if="currentUser">
-        <span class="user-status">
+      <div class="topbar-right">
+        <nav class="site-nav" aria-label="Main navigation">
+          <button
+            :class="{ 'is-active': activePage === 'guide' }"
+            @click="activePage = 'guide'"
+          >
+            Guide
+          </button>
+
+          <button
+            :class="{ 'is-active': activePage === 'locations' }"
+            @click="activePage = 'locations'"
+          >
+            Locations
+          </button>
+
+          <template v-if="currentUser">
+            <button
+              v-if="currentRole === 'admin'"
+              :class="{ 'is-active': activePage === 'admin' }"
+              @click="activePage = 'admin'"
+            >
+              Admin Dashboard
+            </button>
+            <button @click="logoutUser">Logout</button>
+          </template>
+
+          <template v-else>
+            <button
+              :class="{ 'is-active': activePage === 'register' }"
+              @click="activePage = 'register'"
+            >
+              Register
+            </button>
+
+            <button
+              :class="{ 'is-active': activePage === 'login' }"
+              @click="activePage = 'login'"
+            >
+              Login
+            </button>
+          </template>
+        </nav>
+
+        <p v-if="currentUser" class="user-status">
           Signed in as {{ currentUser.displayName || currentUser.email }}
-        </span>
-        <button
-          v-if="currentRole === 'admin'"
-          @click="activePage = 'admin'"
-        >
-          Admin Dashboard
-        </button>
-        <button @click="logoutUser">Logout</button>
-      </template>
-
-      <template v-else>
-        <button @click="activePage = 'register'">Register</button>
-        <button @click="activePage = 'login'">Login</button>
-      </template>
-    </nav>
+        </p>
+      </div>
+    </div>
   </header>
 
   <main class="page-content">
+    <PageIntro
+      v-if="pageIntro[activePage]"
+      :label="pageIntro[activePage].label"
+      :description="pageIntro[activePage].description"
+    />
     <RecyclingGuide v-if="activePage === 'guide'" />
     <RecyclingLocations
       v-if="activePage === 'locations'"
@@ -87,46 +145,93 @@ async function logoutUser() {
       v-if="activePage === 'admin' && currentRole === 'admin'"
     />
   </main>
+  <SiteFooter />
 </template>
 
 <style scoped>
 .site-header {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  background-color: #123d31;
+  color: white;
+  box-shadow: 0 2px 10px rgba(18, 61, 49, 0.18);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.topbar-content {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 1.5rem;
+  width: min(1200px, calc(100% - 3rem));
+  margin: 0 auto;
   padding: 1rem 0;
 }
 
 .site-title {
   margin: 0;
-  font-size: clamp(1.6rem, 4vw, 2.8rem);
+  color: white;
+  font-size: clamp(1.5rem, 3vw, 2.15rem);
+  letter-spacing: -0.03em;
+}
+
+.topbar-right {
+  display: grid;
+  gap: 0.55rem;
+  justify-items: end;
 }
 
 .site-nav {
   display: flex;
   flex-wrap: wrap;
+  justify-content: flex-end;
   gap: 0.5rem;
 }
 
 .site-nav button {
-  padding: 0.6rem 1rem;
-  border: 1px solid #999;
-  border-radius: 0.4rem;
-  background-color: white;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 0.45rem;
+  background-color: transparent;
+  color: white;
   cursor: pointer;
+  font-weight: 600;
 }
 
 .site-nav button:hover {
-  background-color: #e6f4ef;
+  background-color: rgba(255, 255, 255, 0.14);
+}
+
+.site-nav button.is-active {
+  border-color: #d8eee4;
+  background-color: #d8eee4;
+  color: #123d31;
+}
+
+.site-nav button:focus-visible {
+  outline: 3px solid #f4c95d;
+  outline-offset: 2px;
+}
+
+.user-status {
+  margin: 0;
+  color: #e1f3ea;
+  font-weight: 600;
 }
 
 .page-content {
+  display: grid;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
   padding: 1.5rem 0;
 }
 
 @media (max-width: 767px) {
-  .site-header {
+  .topbar-content {
     flex-direction: column;
     align-items: stretch;
   }
@@ -135,55 +240,31 @@ async function logoutUser() {
     text-align: center;
   }
 
-  .site-nav {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+  .topbar-right {
+    justify-items: stretch;
   }
 
-  .site-nav button {
-    width: 100%;
+  .site-nav {
+    justify-content: center;
   }
 
   .user-status {
-    grid-column: 1 / -1;
     text-align: center;
   }
 }
 
 @media (max-width: 575px) {
   .site-nav {
+    display: grid;
     grid-template-columns: 1fr;
+  }
+
+  .site-nav button {
+    width: 100%;
   }
 
   .page-content {
     padding-top: 1rem;
   }
 }
-
-@media (min-width: 768px) {
-  .site-header {
-    flex-direction: row;
-    align-items: center;
-  }
-
-  .site-nav {
-    flex-wrap: wrap;
-    justify-content: flex-end;
-  }
-
-  .page-content {
-    width: 100%;
-    max-width: 900px;
-    margin: 0 auto;
-  }
-}
-
-.user-status {
-  flex-basis: 100%;
-  order: 1;
-  text-align: right;
-  font-weight: 600;
-}
-
-
 </style>
