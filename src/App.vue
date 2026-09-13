@@ -9,6 +9,7 @@ import RecyclingGuide from "./components/RecyclingGuide.vue";
 import RecyclingLocations from "./components/RecyclingLocations.vue";
 import RegisterForm from "./components/RegisterForm.vue";
 import LoginForm from "./components/LoginForm.vue";
+import AdminDashboard from "./components/AdminDashboard.vue";
 
 const activePage = ref("guide");
 const currentUser = ref(null);
@@ -82,13 +83,9 @@ async function logoutUser() {
     />
     <RegisterForm v-if="activePage === 'register'" />
     <LoginForm v-if="activePage === 'login'" />
-    <section
+    <AdminDashboard
       v-if="activePage === 'admin' && currentRole === 'admin'"
-      class="admin-dashboard"
-    >
-      <h2>Admin Dashboard</h2>
-      <p>Administrator access has been granted.</p>
-    </section>
+    />
   </main>
 </template>
 
@@ -188,11 +185,5 @@ async function logoutUser() {
   font-weight: 600;
 }
 
-.admin-dashboard {
-  width: 100%;
-  max-width: 900px;
-  padding: 1.5rem;
-  border: 1px solid #999;
-  border-radius: 0.4rem;
-}
+
 </style>
