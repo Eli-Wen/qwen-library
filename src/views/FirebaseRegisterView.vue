@@ -14,15 +14,15 @@
 <script setup>
 import { ref } from 'vue'
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth'
-import { getFirestore, doc, setDoc } from 'firebase/firestore'
+import { doc, setDoc } from 'firebase/firestore'
 import { useRouter } from 'vue-router'
+import db from '../firebase/init'
 
 const email = ref('')
 const password = ref('')
 const role = ref('member')
 const router = useRouter()
 const auth = getAuth()
-const db = getFirestore()
 
 const register = () => {
   createUserWithEmailAndPassword(auth, email.value, password.value)

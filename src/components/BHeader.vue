@@ -39,6 +39,15 @@ const handleLogout = () => {
             Firebase Logout
           </router-link>
         </li>
+        <li class="nav-item">
+          <router-link to="/addbook" class="nav-link" active-class="active">Add Book</router-link>
+        </li>
+        <li class="nav-item">
+          <router-link to="/managebooks" class="nav-link" active-class="active">Manage Books</router-link>
+        </li>
+        <li class="nav-item">
+          <router-link to="/searchbooks" class="nav-link" active-class="active">Search Books</router-link>
+        </li>
         <li v-if="!isAuthenticated" class="nav-item">
           <router-link to="/login" class="nav-link" active-class="active">Login</router-link>
         </li>

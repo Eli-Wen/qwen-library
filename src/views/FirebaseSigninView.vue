@@ -8,14 +8,14 @@
 <script setup>
 import { ref } from 'vue'
 import { getAuth, signInWithEmailAndPassword } from 'firebase/auth'
-import { getFirestore, doc, getDoc } from 'firebase/firestore'
+import { doc, getDoc } from 'firebase/firestore'
 import { useRouter } from 'vue-router'
+import db from '../firebase/init'
 
 const email = ref('')
 const password = ref('')
 const router = useRouter()
 const auth = getAuth()
-const db = getFirestore()
 
 const signin = () => {
   signInWithEmailAndPassword(auth, email.value, password.value)
