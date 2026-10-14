@@ -152,9 +152,9 @@ async function logoutUser() {
 .site-header {
   width: 100vw;
   margin-left: calc(50% - 50vw);
-  background-color: #123d31;
-  color: white;
-  box-shadow: 0 2px 10px rgba(18, 61, 49, 0.18);
+  background-color: var(--color-brand);
+  color: var(--color-surface);
+  box-shadow: var(--shadow-header);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -164,22 +164,24 @@ async function logoutUser() {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1.5rem;
-  width: min(1200px, calc(100% - 3rem));
+  gap: var(--space-4);
+  width: min(var(--content-width), calc(100% - (var(--page-gutter) * 2)));
   margin: 0 auto;
   padding: 1rem 0;
 }
 
 .site-title {
   margin: 0;
-  color: white;
-  font-size: clamp(1.5rem, 3vw, 2.15rem);
-  letter-spacing: -0.03em;
+  color: var(--color-surface);
+  font-size: clamp(1.35rem, 2.4vw, 1.85rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1.1;
 }
 
 .topbar-right {
   display: grid;
-  gap: 0.55rem;
+  gap: 0.45rem;
   justify-items: end;
 }
 
@@ -187,47 +189,48 @@ async function logoutUser() {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 0.5rem;
+  gap: 0.45rem;
 }
 
 .site-nav button {
-  padding: 0.55rem 0.85rem;
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  border-radius: 0.45rem;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
   background-color: transparent;
-  color: white;
+  color: var(--color-surface);
   cursor: pointer;
   font-weight: 600;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
 }
 
 .site-nav button:hover {
-  background-color: rgba(255, 255, 255, 0.14);
+  background-color: rgba(255, 255, 255, 0.15);
 }
 
 .site-nav button.is-active {
-  border-color: #d8eee4;
-  background-color: #d8eee4;
-  color: #123d31;
+  border-color: var(--color-surface);
+  background-color: var(--color-surface);
+  color: var(--color-brand-strong);
 }
 
 .site-nav button:focus-visible {
-  outline: 3px solid #f4c95d;
-  outline-offset: 2px;
+  outline: 3px solid var(--color-accent);
+  outline-offset: 3px;
 }
 
 .user-status {
   margin: 0;
-  color: #e1f3ea;
+  color: #dceee3;
+  font-size: 0.875rem;
   font-weight: 600;
 }
 
 .page-content {
   display: grid;
-  gap: 1.5rem;
-  width: 100%;
-  max-width: 900px;
+  gap: var(--space-5);
+  width: min(var(--content-width), calc(100% - (var(--page-gutter) * 2)));
   margin: 0 auto;
-  padding: 1.5rem 0;
+  padding: var(--space-6) 0 var(--space-7);
 }
 
 @media (max-width: 767px) {
@@ -264,7 +267,7 @@ async function logoutUser() {
   }
 
   .page-content {
-    padding-top: 1rem;
+    padding-top: var(--space-4);
   }
 }
 </style>
