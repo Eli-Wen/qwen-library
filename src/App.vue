@@ -12,19 +12,20 @@ import LoginForm from "./components/LoginForm.vue";
 import AdminDashboard from "./components/AdminDashboard.vue";
 import PageIntro from "./components/PageIntro.vue";
 import SiteFooter from "./components/SiteFooter.vue";
+import HomeView from "./components/HomeView.vue";
 
-const activePage = ref("guide");
+const activePage = ref("home");
 const currentUser = ref(null);
 
 const currentRole = ref(null);
 const pageIntro = {
   guide: {
     label: "Explore",
-    description: "Browse practical recycling guidance for common household items."
+    description: "Find practical guidance for common household items."
   },
   locations: {
-    label: "Find and rate",
-    description: "Search listed locations and, once signed in, share a rating."
+    label: "Find a location",
+    description: "Search official Victorian recycling infrastructure near you."
   },
   register: {
     label: "Create an account",
@@ -62,13 +63,13 @@ onAuthStateChanged(auth, async (user) => {
     user &&
     (activePage.value === "register" || activePage.value === "login")
   ) {
-    activePage.value = "guide";
+    activePage.value = "home";
   }
 });
 
 async function logoutUser() {
   await signOut(auth);
-  activePage.value = "guide";
+  activePage.value = "home";
 }
 </script>
 
@@ -80,17 +81,24 @@ async function logoutUser() {
       <div class="topbar-right">
         <nav class="site-nav" aria-label="Main navigation">
           <button
+            :class="{ 'is-active': activePage === 'home' }"
+            @click="activePage = 'home'"
+          >
+            Home
+          </button>
+
+          <button
             :class="{ 'is-active': activePage === 'guide' }"
             @click="activePage = 'guide'"
           >
-            Guide
+            How to recycle
           </button>
 
           <button
             :class="{ 'is-active': activePage === 'locations' }"
             @click="activePage = 'locations'"
           >
-            Locations
+            Find a location
           </button>
 
           <template v-if="currentUser">
@@ -129,6 +137,10 @@ async function logoutUser() {
   </header>
 
   <main class="page-content">
+    <HomeView
+      v-if="activePage === 'home'"
+      @navigate="activePage = $event"
+    />
     <PageIntro
       v-if="pageIntro[activePage]"
       :label="pageIntro[activePage].label"
