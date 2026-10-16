@@ -162,8 +162,7 @@ async function logoutUser() {
 
 <style scoped>
 .site-header {
-  width: 100vw;
-  margin-left: calc(50% - 50vw);
+  width: 100%;
   background-color: var(--color-brand);
   color: var(--color-surface);
   box-shadow: var(--shadow-header);

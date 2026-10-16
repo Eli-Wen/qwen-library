@@ -2,10 +2,16 @@
 import { onMounted, ref } from 'vue'
 import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../firebase'
+import InteractiveDataTable from './InteractiveDataTable.vue'
 
 const users = ref([])
 const loading = ref(true)
 const errorMessage = ref('')
+const userColumns = [
+  { key: 'displayName', label: 'Name', value: (user) => user.displayName },
+  { key: 'email', label: 'Email', value: (user) => user.email },
+  { key: 'role', label: 'Role', value: (user) => user.role }
+]
 
 async function loadUsers() {
   loading.value = true
@@ -29,7 +35,7 @@ async function loadUsers() {
         return firstUser.displayName.localeCompare(secondUser.displayName)
       })
   } catch (error) {
-    errorMessage.value = 'User data could not be loaded.'
+  errorMessage.value = 'We could not load account details right now. Please try again.'
   } finally {
     loading.value = false
   }
@@ -56,66 +62,23 @@ onMounted(loadUsers)
         {{ users.length }} registered user{{ users.length === 1 ? '' : 's' }}.
       </p>
 
-      <ul class="user-list">
-        <li v-for="user in users" :key="user.id" class="user-item">
-          <h3>{{ user.displayName }}</h3>
-          <p>{{ user.email }}</p>
-          <p>
-            Role:
-            <span class="role-label">{{ user.role }}</span>
-          </p>
-        </li>
-      </ul>
+      <InteractiveDataTable
+        :columns="userColumns"
+        :rows="users"
+        empty-message="No registered accounts match those filters."
+      />
     </template>
   </section>
 </template>
 
 <style scoped>
-.admin-dashboard {
-  width: 100%;
-  max-width: 900px;
-  padding: 1.5rem;
-  border: 1px solid #d5d5d5;
-  border-radius: 0.6rem;
-  background-color: #f8fbfa;
-}
+.admin-dashboard { width:100%; }
 
 .user-count {
   font-weight: 600;
 }
 
-.user-list {
-  display: grid;
-  gap: 0.8rem;
-  padding: 0;
-  margin: 1rem 0 0;
-  list-style: none;
-}
-
-.user-item {
-  padding: 1rem;
-  border: 1px solid #d5d5d5;
-  border-radius: 0.4rem;
-  background-color: white;
-}
-
-.user-item h3,
-.user-item p {
-  margin: 0.35rem 0;
-}
-
-.role-label {
-  font-weight: 600;
-  text-transform: capitalize;
-}
-
 .error-message {
-  color: #a12626;
-}
-
-@media (min-width: 768px) {
-  .user-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  color: var(--color-danger);
 }
 </style>
