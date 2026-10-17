@@ -1,0 +1,114 @@
+const responseHeaders = {
+  "content-type": "application/json; charset=UTF-8"
+};
+
+function response(body, status = 200) {
+  return new Response(JSON.stringify(body), { status, headers: responseHeaders });
+}
+
+function textAttachment(location) {
+  const lines = [
+    "CircularLoop Melbourne facility details",
+    "",
+    `Facility: ${location.name}`,
+    `Address: ${location.address || "Not listed"}`,
+    `Suburb: ${location.suburb || "Not listed"}`,
+    `Local area: ${location.localArea || "Not listed"}`,
+    `Operator: ${location.operator || "Not listed"}`,
+    `Service type: ${location.type || "Not listed"}`,
+    "",
+    "Check opening hours, accepted items and access conditions with the facility before visiting."
+  ];
+
+  const bytes = new TextEncoder().encode(lines.join("\n"));
+  let binary = "";
+
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+
+  return btoa(binary);
+}
+
+async function verifiedEmail(idToken, firebaseWebApiKey) {
+  const accountResponse = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${firebaseWebApiKey}`,
+    {
+      method: "POST",
+      headers: responseHeaders,
+      body: JSON.stringify({ idToken })
+    }
+  );
+
+  if (!accountResponse.ok) {
+    return null;
+  }
+
+  const account = await accountResponse.json();
+  return account.users?.[0]?.email || null;
+}
+
+function validLocation(location) {
+  return location
+    && typeof location.name === "string"
+    && location.name.trim().length > 0
+    && location.name.length <= 180;
+}
+
+export async function onRequestPost({ request, env }) {
+  if (!env.RESEND_API_KEY || !env.FIREBASE_WEB_API_KEY) {
+    return response({ message: "Email is not available yet." }, 503);
+  }
+
+  const authorization = request.headers.get("authorization") || "";
+  const idToken = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
+
+  if (!idToken) {
+    return response({ message: "Please sign in before sending an email." }, 401);
+  }
+
+  let requestBody;
+
+  try {
+    requestBody = await request.json();
+  } catch {
+    return response({ message: "We could not prepare that email. Please try again." }, 400);
+  }
+
+  if (!validLocation(requestBody.location)) {
+    return response({ message: "Choose a facility before sending an email." }, 400);
+  }
+
+  const recipient = await verifiedEmail(idToken, env.FIREBASE_WEB_API_KEY);
+
+  if (!recipient) {
+    return response({ message: "Please sign in again before sending an email." }, 401);
+  }
+
+  const location = requestBody.location;
+  const resendResponse = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      authorization: `Bearer ${env.RESEND_API_KEY}`,
+      "content-type": "application/json"
+    },
+    body: JSON.stringify({
+      from: env.RESEND_FROM_EMAIL || "CircularLoop Melbourne <onboarding@resend.dev>",
+      to: [recipient],
+      subject: `Facility details: ${location.name}`,
+      text: `Your facility details are attached. Check opening hours, accepted items and access conditions with the facility before visiting.`,
+      attachments: [
+        {
+          filename: "circularloop-facility-details.txt",
+          content: textAttachment(location)
+        }
+      ]
+    })
+  });
+
+  if (!resendResponse.ok) {
+    return response({ message: "We could not send your email right now. Please try again." }, 502);
+  }
+
+  return response({ message: "Your facility details have been emailed to you." });
+}

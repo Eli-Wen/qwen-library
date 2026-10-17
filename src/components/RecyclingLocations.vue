@@ -1,8 +1,9 @@
 <script setup>
 import { onMounted, ref, watch } from "vue";
 import { collection, doc, getDocs, serverTimestamp, setDoc } from "firebase/firestore";
-import { db } from "../firebase";
+import { auth, db } from "../firebase";
 import InteractiveDataTable from "./InteractiveDataTable.vue";
+import LocationMap from "./LocationMap.vue";
 
 const DATASET_URL = "https://discover.data.vic.gov.au/api/3/action/datastore_search?resource_id=e44f5d96-51e8-48ec-b674-299d100a0231&limit=700";
 
@@ -14,6 +15,8 @@ const selectedLocation = ref(null);
 const ratingSummary = ref(null);
 const selectedScore = ref(null);
 const ratingFeedback = ref(null);
+const emailFeedback = ref(null);
+const emailSending = ref(false);
 const locationColumns = [
   { key: "name", label: "Facility", value: (location) => location.name },
   { key: "suburb", label: "Suburb", value: (location) => location.suburb },
@@ -33,7 +36,9 @@ function normaliseLocation(record) {
     suburb: readField(record, "Suburb"),
     localArea: readField(record, "LGA"),
     operator: readField(record, "Owner"),
-    type: readField(record, "Infrastructure Type") || readField(record, "Type")
+    type: readField(record, "Infrastructure Type") || readField(record, "Type"),
+    latitude: Number(readField(record, "Latitude")),
+    longitude: Number(readField(record, "Longitude"))
   };
 }
 
@@ -57,7 +62,42 @@ function selectLocation(location) {
   selectedLocation.value = location;
   selectedScore.value = null;
   ratingFeedback.value = null;
+  emailFeedback.value = null;
   loadRating(location.id);
+}
+
+async function emailFacilityDetails() {
+  if (!auth.currentUser || !selectedLocation.value) {
+    return;
+  }
+
+  emailSending.value = true;
+  emailFeedback.value = null;
+
+  try {
+    const idToken = await auth.currentUser.getIdToken();
+    const response = await fetch("/api/send-facility-email", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${idToken}`,
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({ location: selectedLocation.value })
+    });
+    const payload = await response.json();
+
+    emailFeedback.value = {
+      type: response.ok ? "success" : "error",
+      message: payload.message || "Something went wrong. Please try again."
+    };
+  } catch {
+    emailFeedback.value = {
+      type: "error",
+      message: "Something went wrong. Please try again."
+    };
+  } finally {
+    emailSending.value = false;
+  }
 }
 
 async function loadRating(locationId) {
@@ -113,6 +153,11 @@ onMounted(loadLocations);
       <button type="button" class="text-action" @click="loadLocations">Try again</button>
     </div>
     <template v-else>
+      <LocationMap
+        :locations="locations"
+        :selected-location="selectedLocation"
+        @select="selectLocation"
+      />
       <div class="directory-layout">
         <InteractiveDataTable
           :columns="locationColumns"
@@ -135,6 +180,12 @@ onMounted(loadLocations);
               <div v-if="selectedLocation.type"><dt>Service type</dt><dd>{{ selectedLocation.type }}</dd></div>
             </dl>
             <p class="visit-note">Check opening hours, accepted items and access conditions with the facility before visiting.</p>
+            <div v-if="currentUser" class="email-panel">
+              <h4>Email these details</h4>
+              <p>We will send a text attachment to your signed-in email address.</p>
+              <button type="button" class="email-button" :disabled="emailSending" @click="emailFacilityDetails">{{ emailSending ? "Sending…" : "Email facility details" }}</button>
+              <p v-if="emailFeedback" :class="emailFeedback.type" aria-live="polite">{{ emailFeedback.message }}</p>
+            </div>
             <div v-if="currentUser" class="rating-panel">
               <p v-if="ratingSummary" class="rating-summary">{{ ratingSummary.count ? `Average rating: ${ratingSummary.average.toFixed(1)} / 5 from ${ratingSummary.count} ratings.` : "No ratings yet." }}</p>
               <fieldset><legend>Rate this location</legend><label v-for="score in [1, 2, 3, 4, 5]" :key="score"><input v-model="selectedScore" :value="score" type="radio" :name="`rating-${selectedLocation.id}`"> {{ score }}</label></fieldset>
@@ -162,6 +213,6 @@ a,.text-action { color:var(--color-brand); font-weight:800; text-underline-offse
 .directory-layout { display:grid; grid-template-columns:minmax(0,1fr) minmax(18rem,.68fr); gap:var(--space-4); align-items:start; }
 .location-detail { position:sticky; top:7rem; padding:var(--space-4); border-radius:var(--radius-md); background:var(--color-surface); box-shadow:var(--shadow-card); }.location-detail > p:not(.eyebrow),dd { color:var(--color-text-muted); line-height:1.55; }
 dl { display:grid; gap:var(--space-3); margin:var(--space-4) 0; } dl div { display:grid; gap:.15rem; } dt { color:var(--color-brand-strong); font-weight:800; } dd { margin:0; }.visit-note { padding:var(--space-3); border-left:4px solid var(--color-accent); background:#fff9e8; }
-.rating-panel { margin-top:var(--space-4); padding-top:var(--space-4); border-top:1px solid var(--color-border); }.rating-summary { font-weight:700; } fieldset { display:flex; flex-wrap:wrap; gap:.65rem; margin:var(--space-3) 0; padding:0; border:0; } legend { width:100%; margin-bottom:.35rem; font-weight:800; } fieldset label { display:flex; gap:.2rem; align-items:center; }.save-rating { padding:.7rem 1rem; border:0; border-radius:999px; background:var(--color-brand); color:var(--color-surface); font:inherit; font-weight:800; cursor:pointer; }.success { color:#176b3a; font-weight:700; }.error { color:#a12626; font-weight:700; }.sign-in-message { margin-top:var(--space-4); font-weight:700; }.status-message { padding:var(--space-4); border-radius:var(--radius-sm); background:var(--color-muted); } button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible { outline:3px solid var(--color-accent); outline-offset:3px; }
+.email-panel,.rating-panel { margin-top:var(--space-4); padding-top:var(--space-4); border-top:1px solid var(--color-border); }.email-panel h4 { margin:0; color:var(--color-brand-strong); font-size:1rem; }.email-panel p { margin:var(--space-1) 0 var(--space-3); }.email-button,.save-rating { padding:.7rem 1rem; border:0; border-radius:999px; background:var(--color-brand); color:var(--color-surface); font:inherit; font-weight:800; cursor:pointer; }.email-button:disabled { background:var(--color-text-muted); cursor:wait; }.rating-summary { font-weight:700; } fieldset { display:flex; flex-wrap:wrap; gap:.65rem; margin:var(--space-3) 0; padding:0; border:0; } legend { width:100%; margin-bottom:.35rem; font-weight:800; } fieldset label { display:flex; gap:.2rem; align-items:center; }.success { color:#176b3a; font-weight:700; }.error { color:#a12626; font-weight:700; }.sign-in-message { margin-top:var(--space-4); font-weight:700; }.status-message { padding:var(--space-4); border-radius:var(--radius-sm); background:var(--color-muted); } button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible { outline:3px solid var(--color-accent); outline-offset:3px; }
 @media (max-width:767px) { .locations-heading,.directory-layout { grid-template-columns:1fr; display:grid; }.locations-heading { align-items:start; }.location-detail { position:static; } }
 </style>
