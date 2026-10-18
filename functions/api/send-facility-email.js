@@ -55,6 +55,14 @@ function validLocation(location) {
     && location.name.length <= 180;
 }
 
+function safeLogValue(value) {
+  return String(value || "")
+    .replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[email]")
+    .replace(/\bSG\.[A-Za-z0-9._-]+\b/g, "[secret]")
+    .replace(/Bearer\s+\S+/gi, "Bearer [secret]")
+    .slice(0, 300);
+}
+
 export async function onRequestPost({ request, env }) {
   if (!env.SENDGRID_API_KEY || !env.SENDGRID_FROM_EMAIL || !env.FIREBASE_WEB_API_KEY) {
     return response({ message: "Email is not available yet." }, 503);
@@ -114,6 +122,21 @@ export async function onRequestPost({ request, env }) {
   });
 
   if (sendGridResponse.status !== 202) {
+    let errors = [];
+
+    try {
+      const errorBody = await sendGridResponse.json();
+      if (Array.isArray(errorBody.errors)) {
+        errors = errorBody.errors.slice(0, 3).map(({ field, message }) => ({
+          field: safeLogValue(field),
+          message: safeLogValue(message)
+        }));
+      }
+    } catch {
+      // The HTTP status is still useful when SendGrid returns a non-JSON body.
+    }
+
+    console.error("SendGrid mail send rejected", { status: sendGridResponse.status, errors });
     return response({ message: "We could not send your email right now. Please try again." }, 502);
   }
 
