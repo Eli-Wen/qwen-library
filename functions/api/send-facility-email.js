@@ -56,7 +56,7 @@ function validLocation(location) {
 }
 
 export async function onRequestPost({ request, env }) {
-  if (!env.RESEND_API_KEY || !env.FIREBASE_WEB_API_KEY) {
+  if (!env.SENDGRID_API_KEY || !env.SENDGRID_FROM_EMAIL || !env.FIREBASE_WEB_API_KEY) {
     return response({ message: "Email is not available yet." }, 503);
   }
 
@@ -86,27 +86,34 @@ export async function onRequestPost({ request, env }) {
   }
 
   const location = requestBody.location;
-  const resendResponse = await fetch("https://api.resend.com/emails", {
+  const sendGridResponse = await fetch("https://api.sendgrid.com/v3/mail/send", {
     method: "POST",
     headers: {
-      authorization: `Bearer ${env.RESEND_API_KEY}`,
+      authorization: `Bearer ${env.SENDGRID_API_KEY}`,
       "content-type": "application/json"
     },
     body: JSON.stringify({
-      from: env.RESEND_FROM_EMAIL || "CircularLoop Melbourne <onboarding@resend.dev>",
-      to: [recipient],
+      from: {
+        email: env.SENDGRID_FROM_EMAIL,
+        name: "CircularLoop Melbourne"
+      },
+      personalizations: [{ to: [{ email: recipient }] }],
       subject: `Facility details: ${location.name}`,
-      text: `Your facility details are attached. Check opening hours, accepted items and access conditions with the facility before visiting.`,
+      content: [{
+        type: "text/plain",
+        value: "Your facility details are attached. Check opening hours, accepted items and access conditions with the facility before visiting."
+      }],
       attachments: [
         {
           filename: "circularloop-facility-details.txt",
-          content: textAttachment(location)
+          content: textAttachment(location),
+          type: "text/plain"
         }
       ]
     })
   });
 
-  if (!resendResponse.ok) {
+  if (sendGridResponse.status !== 202) {
     return response({ message: "We could not send your email right now. Please try again." }, 502);
   }
 
