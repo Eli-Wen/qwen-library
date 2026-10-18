@@ -131,6 +131,7 @@ async function logoutUser() {
 
         <p v-if="currentUser" class="user-status">
           Signed in as {{ currentUser.displayName || currentUser.email }}
+          <span v-if="currentUser.displayName && currentUser.email" class="user-email">{{ currentUser.email }}</span>
         </p>
       </div>
     </div>
@@ -234,6 +235,14 @@ async function logoutUser() {
   color: #dceee3;
   font-size: 0.875rem;
   font-weight: 600;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.user-email {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.8rem;
 }
 
 .page-content {

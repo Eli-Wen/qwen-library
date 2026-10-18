@@ -28,6 +28,13 @@ function readField(record, field) {
   return String(record[field] || "").trim();
 }
 
+function readCoordinate(record, field, minimum, maximum) {
+  const rawValue = readField(record, field);
+  if (!rawValue) return null;
+  const coordinate = Number(rawValue);
+  return Number.isFinite(coordinate) && coordinate >= minimum && coordinate <= maximum ? coordinate : null;
+}
+
 function normaliseLocation(record) {
   return {
     id: String(record._id),
@@ -37,8 +44,8 @@ function normaliseLocation(record) {
     localArea: readField(record, "LGA"),
     operator: readField(record, "Owner"),
     type: readField(record, "Infrastructure Type") || readField(record, "Type"),
-    latitude: Number(readField(record, "Latitude")),
-    longitude: Number(readField(record, "Longitude"))
+    latitude: readCoordinate(record, "Latitude", -90, 90),
+    longitude: readCoordinate(record, "Longitude", -180, 180)
   };
 }
 

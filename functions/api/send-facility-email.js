@@ -49,10 +49,21 @@ async function verifiedEmail(idToken, firebaseWebApiKey) {
 }
 
 function validLocation(location) {
-  return location
-    && typeof location.name === "string"
-    && location.name.trim().length > 0
-    && location.name.length <= 180;
+  if (!location || typeof location !== "object" || Array.isArray(location)) return false;
+
+  const textFieldLimits = {
+    name: 180,
+    address: 300,
+    suburb: 120,
+    localArea: 120,
+    operator: 180,
+    type: 180
+  };
+
+  return Object.entries(textFieldLimits).every(([field, maximum]) =>
+    typeof location[field] === "string" && location[field].length <= maximum
+  ) && location.name.trim().length > 0
+    && !/[\u0000-\u001F\u007F]/.test(location.name);
 }
 
 function safeLogValue(value) {
@@ -78,12 +89,16 @@ export async function onRequestPost({ request, env }) {
   let requestBody;
 
   try {
-    requestBody = await request.json();
+    const rawBody = await request.text();
+    if (new TextEncoder().encode(rawBody).length > 8192) {
+      return response({ message: "That facility record is too large to email." }, 413);
+    }
+    requestBody = JSON.parse(rawBody);
   } catch {
     return response({ message: "We could not prepare that email. Please try again." }, 400);
   }
 
-  if (!validLocation(requestBody.location)) {
+  if (!validLocation(requestBody?.location)) {
     return response({ message: "Choose a facility before sending an email." }, 400);
   }
 
@@ -140,5 +155,5 @@ export async function onRequestPost({ request, env }) {
     return response({ message: "We could not send your email right now. Please try again." }, 502);
   }
 
-  return response({ message: "Your facility details have been emailed to you." });
+  return response({ message: "Your email request was accepted. Please check your inbox shortly." });
 }
