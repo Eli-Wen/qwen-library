@@ -3,20 +3,30 @@ const guides = [
     {
         id: 1,
         item: 'Cardboard box',
-        category: 'Sample household item',
-        instruction: 'Sample instruction for checking the correct recycling option.'
+        category: 'Paper and cardboard',
+        instruction: 'Remove food, flatten the box and keep it dry before placing it in mixed recycling. Check your council’s rules for any exceptions.',
+        sourceUrl: 'https://www.environment.vic.gov.au/household-waste-recycling/sort-waste-recycling'
     },
     {
         id: 2,
         item: 'Used battery',
-        category: 'Sample special item',
-        instruction: 'Sample instruction for checking a suitable drop-off service.'
+        category: 'Battery drop-off',
+        instruction: 'Do not put batteries in any household bin. Tape exposed terminals and take them to a battery recycling drop-off point; check B-cycle or your local council for locations.',
+        sourceUrl: 'https://www.environment.vic.gov.au/household-waste-recycling/ewaste'
     },
     {
         id: 3,
         item: 'Glass jar',
-        category: 'Sample container',
-        instruction: 'Check whether the jar can be placed in the appropriate recycling bin.'
+        category: 'Glass bottles and jars',
+        instruction: 'Empty the jar and rinse if needed. Use a glass-only bin where available; otherwise use mixed recycling. Check your council’s rules for lids.',
+        sourceUrl: 'https://www.environment.vic.gov.au/household-waste-recycling/sort-waste-recycling'
+    },
+    {
+        id: 4,
+        item: 'Old phone',
+        category: 'Electronic waste',
+        instruction: 'Do not put phones in any household bin. Take them to an e-waste drop-off point and check your council’s accepted items before visiting.',
+        sourceUrl: 'https://www.environment.vic.gov.au/household-waste-recycling/ewaste'
     }
 
 ]
@@ -32,6 +42,7 @@ const guides = [
             <h3>{{ guide.item }}</h3>
             <p class="guide-category">{{ guide.category }}</p>
             <p>{{ guide.instruction }}</p>
+            <a :href="guide.sourceUrl" target="_blank" rel="noopener noreferrer">Source: Victorian Government</a>
         </li>
     </ul>
   </section>
